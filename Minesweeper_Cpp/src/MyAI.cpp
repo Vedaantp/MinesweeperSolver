@@ -21,28 +21,12 @@
 
 MyAI::MyAI ( int _rowDimension, int _colDimension, int _totalMines, int _agentX, int _agentY ) : Agent()
 {
-    // ======================================================================
-    // YOUR CODE BEGINS
-    // ======================================================================
-
-    /*
-
-        Board Info
-
-        -2 = covered tile
-        >= 0 = Uncovered tile
-        -1 = flag
-    
-    */
-    
-    //  assigning old positions to class variable
     rows = _rowDimension;
     cols = _colDimension;
     oldXPos = _agentX;
     oldYPos = _agentY;
     regClear = true;
 
-    //  mallocing the board
     board = (int**)malloc(_rowDimension * sizeof(int*));
     realBoard = (int**)malloc(_rowDimension * sizeof(int*));
 
@@ -51,11 +35,6 @@ MyAI::MyAI ( int _rowDimension, int _colDimension, int _totalMines, int _agentX,
         realBoard[i] = (int*)malloc(_colDimension * sizeof(int));
     }
 
-    //init board
-    // initialize the pairs in a map with val set to false for unvisited
-    //  we can use this to check if we should uncover a tile or not later on
-    //  True = visited
-    //  False = unvisited
     for(int i = 0; i < _rowDimension; i++){
         for(int j = 0; j < _colDimension; j++){
             matrix.insert({{i,j}, false});
@@ -66,25 +45,12 @@ MyAI::MyAI ( int _rowDimension, int _colDimension, int _totalMines, int _agentX,
             visited.insert({{i,j}, false});
         }
     }
-
-    // ======================================================================
-    // YOUR CODE ENDS
-    // ======================================================================
 };
 
 Agent::Action MyAI::getAction( int number )
 {
-    // ======================================================================
-    // YOUR CODE BEGINS
-    // ======================================================================
-
-    //  update board
     updateBoard(number);
 
-    
-    //update the queue by adding uncovered tiles
-    //pop the top and check if it is a zero
-    //if it is a zero add all covered tiles into the zero queue
     if(number == 0){
         pushAdjacentToZero();
     }
@@ -94,7 +60,6 @@ Agent::Action MyAI::getAction( int number )
         checkFlags();
     }
 
-    // if it was a zero uncover it
     if(!zeros.empty()){
 
         oldXPos = zeros.front().first;
@@ -107,7 +72,6 @@ Agent::Action MyAI::getAction( int number )
 
     }
     
-    // if it needs to be flagged, flag it
     if(!flags.empty()){
         oldXPos = flags.front().first;
         oldYPos = flags.front().second;
@@ -116,34 +80,26 @@ Agent::Action MyAI::getAction( int number )
         if(flagmap[{oldXPos, oldYPos}] == false){
             matrix[{oldXPos, oldYPos}] = true;
             flagmap[{oldXPos, oldYPos}] = true;
-            //  decrements the surrounding tiles by 1
-            //  if the tile turns into a 0 its adjacent covered tiles are added to 
-            //  zero queue
             updateTiles();
             visited[{oldXPos, oldYPos}] = true;
             return {FLAG, oldXPos, oldYPos};
         }
     }
 
-    //  for each numbered tile check if it has anything to flag
     for(int i = 0; i < reg.size(); i++){
         oldXPos = reg.front().first;
         oldYPos = reg.front().second;
         reg.pop();
 
-        // gets the number of covered tiles adjacent to this tile
         checkCovered();
 
-        //  if the number of covered tiles == the number on the tile
         if(covered == board[rows - oldYPos - 1][oldXPos]){
-            //  push the covered adjacent tiles to the flag queue
             pushToFlags();
             covered = 0;
             i++;
 
         }
 
-        //  otherwise push it back into the regular queue
         else{
             reg.push({oldXPos, oldYPos});
             covered = 0;
@@ -152,7 +108,6 @@ Agent::Action MyAI::getAction( int number )
         covered = 0;
     }
 
-    // if it needs to be flagged, flag it
     if(!flags.empty()){
         oldXPos = flags.front().first;
         oldYPos = flags.front().second;
@@ -161,45 +116,17 @@ Agent::Action MyAI::getAction( int number )
         if(flagmap[{oldXPos, oldYPos}] == false){
             matrix[{oldXPos, oldYPos}] = true;
             flagmap[{oldXPos, oldYPos}] = true;
-            //  decrements the surrounding tiles by 1
-            //  if the tile turns into a 0 its adjacent covered tiles are added to 
-            //  zero queue
             updateTiles();
             visited[{oldXPos, oldYPos}] = true;
             return {FLAG, oldXPos, oldYPos};
         }
     }
 
-    //  Guessing using probability find the tile with lowest probability of being a mine and uncover
     if(regClear){
         while(!reg.empty()){
             reg.pop();
         }
     }
-
-    // bool tempC = false;
-    // bool tempV = false;
-
-    // for(int i = 0; i < cols; i++){
-    //     for(int j = 0; j < rows; j++){
-    //         if(visited[{i,j}] == false){
-    //             tempV = checkVFrontier(i, j);
-    //             if(tempV){
-    //                 V.insert({i, j});
-    //                 tempV = false;
-    //             }
-    //         }
-    //         else{
-    //             tempC = checkCFrontier(i, j);
-    //             if(tempC){
-    //                 C.insert({i,j});
-    //                 tempC = false;
-    //             }
-    //         }
-    //     }
-    // }
-
-    // cout << "V: " << V.size() << " C: " << C.size() << endl;
 
     tempMin = 1000;
     min = 1000;
@@ -261,75 +188,20 @@ Agent::Action MyAI::getAction( int number )
 
     }
 
-    // bool tempC = false;
-    // bool tempV = false;
-
-    // for(int i = 0; i < cols; i++){
-    //     for(int j = 0; j < rows; j++){
-    //         if(visited[{i,j}] == false){
-    //             tempV = checkVFrontier(i, j);
-    //             cout << "yes";
-    //             if(tempV){
-    //                 V.insert({i, j});
-    //                 tempV = false;
-    //                 cout << "YES";
-    //             }
-    //         }
-    //         else{
-    //             tempC = checkCFrontier(i, j);
-    //             if(tempC){
-    //                 C.insert({i,j});
-    //                 tempC = false;
-    //                 cout << "AND NO";
-    //             }
-    //         }
-    //     }
-    // }
-
-
-
-    // cout << "V: " << V.size() << " C: " << C.size() << endl;
-
     return {LEAVE,-1,-1};
-
-    // ======================================================================
-    // YOUR CODE ENDS
-    // ======================================================================
 
 }
 
-
-// ======================================================================
-// YOUR CODE BEGINS
-// ======================================================================
-
-//  updating the board by passing the position we uncovered and the number it revealed
-//  displaying the board after updating
 void MyAI::updateBoard(int number){
 
     board[rows - oldYPos - 1][oldXPos] = number;
     realBoard[rows - oldYPos - 1][oldXPos] = number;
-
-
-    //  uncomment for visualization
-
-    // for(int i = 0; i < rows; i++){
-    //     for(int j = 0; j < cols; j++){
-    //         cout << board[i][j] << ' ';
-    //     }
-        
-    //     cout << endl;
-    // }
-
-    // cout << endl << endl;
 }
 
 void MyAI::pushAdjacentToZero(){
 
-    //checking right side
     if(oldXPos + 1 != cols){
 
-        //  checking bottom right
         if(rows - oldYPos != rows){
 
             if(matrix[{oldXPos + 1, oldYPos - 1}] == false){
@@ -337,8 +209,6 @@ void MyAI::pushAdjacentToZero(){
                 matrix[{oldXPos + 1, oldYPos - 1}] = true;
             }
         }
-
-        //  checking top right
         if(rows - oldYPos - 2 != -1){
 
             if(matrix[{oldXPos + 1, oldYPos + 1}] == false){
@@ -347,7 +217,6 @@ void MyAI::pushAdjacentToZero(){
             }
         }
 
-        //  checking middle right
         if(matrix[{oldXPos + 1, oldYPos}] == false){
             zeros.push({oldXPos + 1, oldYPos});
             matrix[{oldXPos + 1, oldYPos}] = true;
@@ -355,7 +224,6 @@ void MyAI::pushAdjacentToZero(){
     
     }
 
-    //  checking top middle
     if(rows - oldYPos - 2 != -1){
 
         if(matrix[{oldXPos, oldYPos + 1}] == false){
@@ -373,10 +241,8 @@ void MyAI::pushAdjacentToZero(){
         }
     }    
 
-    //  checking left side
     if(oldXPos - 1 != -1){
 
-        //  checking top left
         if(rows - oldYPos - 2 != -1){
 
             if(matrix[{oldXPos - 1, oldYPos + 1}] == false){
@@ -385,13 +251,11 @@ void MyAI::pushAdjacentToZero(){
             }
         }
 
-        //  checking middle left
         if(matrix[{oldXPos - 1, oldYPos}] == false){
             zeros.push({oldXPos - 1, oldYPos});
             matrix[{oldXPos - 1, oldYPos}] = true;
         }
 
-        //  checking bottom left
         if(rows - oldYPos != rows){
 
             if(matrix[{oldXPos - 1, oldYPos - 1}] == false){
@@ -404,10 +268,8 @@ void MyAI::pushAdjacentToZero(){
 }
 
 void MyAI::checkCovered(){
-    //checking right side
     if(oldXPos + 1 != cols){
 
-        //  checking bottom right
         if(rows - oldYPos != rows){
 
             if(board[rows - oldYPos][oldXPos + 1] == -2){
@@ -415,7 +277,6 @@ void MyAI::checkCovered(){
             }
         }
 
-        //  checking top right
         if(rows - oldYPos - 2 != -1){
 
             if(board[rows - oldYPos - 2][oldXPos + 1] == -2){
@@ -423,14 +284,12 @@ void MyAI::checkCovered(){
             }
         }
 
-        //  checking middle right
         if(board[rows - oldYPos - 1][oldXPos + 1] == -2){
             covered++;
         }     
     
     }
 
-    //  checking top middle
     if(rows - oldYPos - 2 != -1){
 
         if(board[rows - oldYPos - 2][oldXPos] == -2){
@@ -438,7 +297,6 @@ void MyAI::checkCovered(){
         }
     }
     
-    //  checking bottom middle
     if(rows - oldYPos != rows){
 
         if(board[rows - oldYPos][oldXPos] == -2){
@@ -446,10 +304,8 @@ void MyAI::checkCovered(){
         }
     }    
 
-    //  checking left side
     if(oldXPos - 1 != -1){
 
-        //  checking top left
         if(rows - oldYPos - 2 != -1){
 
             if(board[rows - oldYPos - 2][oldXPos - 1] == -2){
@@ -457,12 +313,10 @@ void MyAI::checkCovered(){
             }
         }
 
-        //  checking middle left
         if(board[rows - oldYPos - 1][oldXPos - 1] == -2){
             covered++;
         }
 
-        //  checking bottom left
         if(rows - oldYPos != rows){
 
             if(board[rows - oldYPos][oldXPos - 1] == -2){
@@ -475,10 +329,8 @@ void MyAI::checkCovered(){
 
 void MyAI::pushToFlags(){
 
-    //checking right side
     if(oldXPos + 1 != cols){
 
-        //  checking bottom right
         if(rows - oldYPos != rows){
 
             if(board[rows - oldYPos][oldXPos + 1] < -1){
@@ -486,7 +338,6 @@ void MyAI::pushToFlags(){
             }
         }
 
-        //  checking top right
         if(rows - oldYPos - 2 != -1){
 
             if(board[rows - oldYPos - 2][oldXPos + 1] < -1){
@@ -494,14 +345,12 @@ void MyAI::pushToFlags(){
             }
         }
 
-        //  checking middle right
         if(board[rows - oldYPos - 1][oldXPos + 1] < -1){
             flags.push({oldXPos + 1, oldYPos});
         }     
     
     }
 
-    //  checking top middle
     if(rows - oldYPos - 2 != -1){
 
         if(board[rows - oldYPos - 2][oldXPos] < -1){
@@ -509,7 +358,6 @@ void MyAI::pushToFlags(){
         }
     }
     
-    //  checking bottom middle
     if(rows - oldYPos != rows){
 
         if(board[rows - oldYPos][oldXPos] < -1){
@@ -517,10 +365,8 @@ void MyAI::pushToFlags(){
         }
     }    
 
-    //  checking left side
     if(oldXPos - 1 != -1){
 
-        //  checking top left
         if(rows - oldYPos - 2 != -1){
 
             if(board[rows - oldYPos - 2][oldXPos - 1] < -1){
@@ -528,12 +374,10 @@ void MyAI::pushToFlags(){
             }
         }
 
-        //  checking middle left
         if(board[rows - oldYPos - 1][oldXPos - 1] < -1){
             flags.push({oldXPos - 1, oldYPos});
         }
 
-        //  checking bottom left
         if(rows - oldYPos != rows){
 
             if(board[rows - oldYPos][oldXPos - 1] < -1){
@@ -547,10 +391,8 @@ void MyAI::pushToFlags(){
 
 void MyAI::updateTiles(){
 
-    //checking right side
     if(oldXPos + 1 != cols){
 
-        //  checking bottom right
         if(rows - oldYPos != rows){
 
             if(board[rows - oldYPos][oldXPos + 1] > 0){
@@ -562,7 +404,6 @@ void MyAI::updateTiles(){
             }
         }
 
-        //  checking top right
         if(rows - oldYPos - 2 != -1){
 
             if(board[rows - oldYPos - 2][oldXPos + 1] > 0){
@@ -574,7 +415,6 @@ void MyAI::updateTiles(){
             }
         }
 
-        //  checking middle right
         if(board[rows - oldYPos - 1][oldXPos + 1] > 0){
             board[rows - oldYPos - 1][oldXPos + 1]--;
 
@@ -585,7 +425,6 @@ void MyAI::updateTiles(){
     
     }
 
-    //  checking top middle
     if(rows - oldYPos - 2 != -1){
 
         if(board[rows - oldYPos - 2][oldXPos] > 0){
@@ -597,7 +436,6 @@ void MyAI::updateTiles(){
         }
     }
     
-    //  checking bottom middle
     if(rows - oldYPos != rows){
 
         if(board[rows - oldYPos][oldXPos] > 0){
@@ -609,10 +447,8 @@ void MyAI::updateTiles(){
         }
     }    
 
-    //  checking left side
     if(oldXPos - 1 != -1){
 
-        //  checking top left
         if(rows - oldYPos - 2 != -1){
 
             if(board[rows - oldYPos - 2][oldXPos - 1] > 0){
@@ -624,7 +460,6 @@ void MyAI::updateTiles(){
             }
         }
 
-        //  checking middle left
         if(board[rows - oldYPos - 1][oldXPos - 1] > 0){
             board[rows - oldYPos - 1][oldXPos - 1]--;
 
@@ -633,7 +468,6 @@ void MyAI::updateTiles(){
             }
         }
 
-        //  checking bottom left
         if(rows - oldYPos != rows){
 
             if(board[rows - oldYPos][oldXPos - 1] > 0){
@@ -653,7 +487,6 @@ void MyAI::pushToZero(int xPos, int yPos){
 
     if(xPos + 1 != cols){
 
-        //  checking bottom right
         if(rows - yPos != rows){
             if(flagmap[{xPos + 1, yPos - 1}] == false && board[rows - yPos][xPos + 1] == -2){
                 zeros.push({xPos + 1, yPos - 1});
@@ -661,7 +494,6 @@ void MyAI::pushToZero(int xPos, int yPos){
             }
         }
 
-        //  checking top right
         if(rows - yPos - 2 != -1){
             if(flagmap[{xPos + 1, yPos + 1}] == false && board[rows - yPos - 2][xPos + 1] == -2){
                 zeros.push({xPos + 1, yPos + 1});
@@ -670,7 +502,6 @@ void MyAI::pushToZero(int xPos, int yPos){
 
         }
 
-        //  checking middle right
         if(flagmap[{xPos + 1, yPos}] == false && board[rows - yPos - 1][xPos + 1] == -2){
             zeros.push({xPos + 1, yPos});
             matrix[{xPos + 1, yPos}] = true;
@@ -678,7 +509,6 @@ void MyAI::pushToZero(int xPos, int yPos){
     
     }
 
-    //  checking top middle
     if(rows - yPos - 2 != -1){
         if(flagmap[{xPos, yPos + 1}] == false && board[rows - yPos - 2][xPos] == -2){
             zeros.push({xPos, yPos + 1});
@@ -686,7 +516,6 @@ void MyAI::pushToZero(int xPos, int yPos){
         }
     }
     
-    //  checking bottom middle
     if(rows - yPos != rows){
         if(flagmap[{xPos, yPos - 1}] == false && board[rows - yPos][xPos] == -2){
             zeros.push({xPos, yPos - 1});
@@ -694,10 +523,8 @@ void MyAI::pushToZero(int xPos, int yPos){
         }
     }    
 
-    //  checking left side
     if(xPos - 1 != -1){
 
-        //  checking top left
         if(rows - yPos - 2 != -1){
             if(flagmap[{xPos - 1, yPos + 1}] == false && board[rows - yPos - 2][xPos - 1] == -2){
                 zeros.push({xPos - 1, yPos + 1});
@@ -705,13 +532,11 @@ void MyAI::pushToZero(int xPos, int yPos){
             }
         }
 
-        //  checking middle left
         if(flagmap[{xPos - 1, yPos}] == false && board[rows - yPos - 1][xPos - 1] == -2){
             zeros.push({xPos - 1, yPos});
             matrix[{xPos - 1, yPos}] = true;
         }
 
-        //  checking bottom left
         if(rows - yPos != rows){
             if(flagmap[{xPos - 1, yPos - 1}] == false && board[rows - yPos][xPos - 1] == -2){
                 zeros.push({xPos - 1, yPos - 1});
@@ -725,10 +550,8 @@ void MyAI::pushToZero(int xPos, int yPos){
 
 void MyAI::checkFlags(){
 
-    //checking right side
     if(oldXPos + 1 != cols){
 
-        //  checking bottom right
         if(rows - oldYPos != rows){
 
             if(board[rows - oldYPos][oldXPos + 1] == -1){
@@ -742,7 +565,6 @@ void MyAI::checkFlags(){
             }
         }
 
-        //  checking top right
         if(rows - oldYPos - 2 != -1){
 
             if(board[rows - oldYPos - 2][oldXPos + 1] == -1){
@@ -756,7 +578,6 @@ void MyAI::checkFlags(){
             }
         }
 
-        //  checking middle right
         if(board[rows - oldYPos - 1][oldXPos + 1] == -1){
            if(board[rows - oldYPos - 1][oldXPos] > 0){
                 board[rows - oldYPos - 1][oldXPos]--;
@@ -769,7 +590,6 @@ void MyAI::checkFlags(){
     
     }
 
-    //  checking top middle
     if(rows - oldYPos - 2 != -1){
 
         if(board[rows - oldYPos - 2][oldXPos] == -1){
@@ -783,7 +603,6 @@ void MyAI::checkFlags(){
         }
     }
     
-    //  checking bottom middle
     if(rows - oldYPos != rows){
 
         if(board[rows - oldYPos][oldXPos] == -1){
@@ -797,10 +616,8 @@ void MyAI::checkFlags(){
         }
     }    
 
-    //  checking left side
     if(oldXPos - 1 != -1){
 
-        //  checking top left
         if(rows - oldYPos - 2 != -1){
 
             if(board[rows - oldYPos - 2][oldXPos - 1] == -1){
@@ -814,7 +631,6 @@ void MyAI::checkFlags(){
             }
         }
 
-        //  checking middle left
         if(board[rows - oldYPos - 1][oldXPos - 1] == -1){
             if(board[rows - oldYPos - 1][oldXPos] > 0){
                 board[rows - oldYPos - 1][oldXPos]--;
@@ -825,7 +641,6 @@ void MyAI::checkFlags(){
             }
         }
 
-        //  checking bottom left
         if(rows - oldYPos != rows){
 
             if(board[rows - oldYPos][oldXPos - 1] == -1){
@@ -848,10 +663,8 @@ float MyAI::findProb(int x, int y){
     float uncov = 0.0;
     float mines = 0.0;
 
-    //checking right side
     if(x + 1 != cols){
 
-        //  checking bottom right
         if(rows - y != rows){
 
             if(board[rows - y][x + 1] < -1){
@@ -867,7 +680,6 @@ float MyAI::findProb(int x, int y){
             }
         }
 
-        //  checking top right
         if(rows - y - 2 != -1){
 
             if(board[rows - y - 2][x + 1] < -1){
@@ -883,7 +695,6 @@ float MyAI::findProb(int x, int y){
             }
         }
 
-        //  checking middle right
         if(board[rows - y - 1][x + 1] < -1){
             cov++;
         }     
@@ -898,7 +709,6 @@ float MyAI::findProb(int x, int y){
     
     }
 
-    //  checking top middle
     if(rows - y - 2 != -1){
 
         if(board[rows - y - 2][x] < -1){
@@ -914,7 +724,6 @@ float MyAI::findProb(int x, int y){
         }
     }
     
-    //  checking bottom middle
     if(rows - y != rows){
 
         if(board[rows - y][x] < -1){
@@ -930,10 +739,8 @@ float MyAI::findProb(int x, int y){
         }
     }    
 
-    //  checking left side
     if(x - 1 != -1){
 
-        //  checking top left
         if(rows - y - 2 != -1){
 
             if(board[rows - y - 2][x - 1] < -1){
@@ -949,7 +756,6 @@ float MyAI::findProb(int x, int y){
             }
         }
 
-        //  checking middle left
         if(board[rows - y - 1][x - 1] < -1){
             cov++;
         }
@@ -962,7 +768,6 @@ float MyAI::findProb(int x, int y){
             uncov++;
         }
 
-        //  checking bottom left
         if(rows - y != rows){
 
             if(board[rows - y][x - 1] < -1){
@@ -989,10 +794,8 @@ int MyAI::checkHits(int x, int y){
     int uncov = 0;
     int hits = 0;
 
-    //checking right side
     if(x + 1 != cols){
 
-        //  checking bottom right
         if(rows - y != rows){
 
             if(board[rows - y][x + 1] == 0){
@@ -1005,7 +808,6 @@ int MyAI::checkHits(int x, int y){
             }                                                                                                                                                                                                                                                                                                      
         }
 
-        //  checking top right
         if(rows - y - 2 != -1){
 
             if(board[rows - y - 2][x + 1] == 0){
@@ -1019,7 +821,6 @@ int MyAI::checkHits(int x, int y){
 
         }
 
-        //  checking middle right
         if(board[rows - y - 1][x + 1] == 0){
             uncov++;
         }     
@@ -1031,7 +832,6 @@ int MyAI::checkHits(int x, int y){
 
     }
 
-    //  checking top middle
     if(rows - y - 2 != -1){
 
         if(board[rows - y - 2][x] == 0){
@@ -1045,7 +845,6 @@ int MyAI::checkHits(int x, int y){
         
     }
     
-    //  checking bottom middle
     if(rows - y != rows){
 
         if(board[rows - y][x] == 0){
@@ -1059,10 +858,8 @@ int MyAI::checkHits(int x, int y){
 
     }    
 
-    //  checking left side
     if(x - 1 != -1){
 
-        //  checking top left
         if(rows - y - 2 != -1){
 
             if(board[rows - y - 2][x - 1] == 0){
@@ -1076,7 +873,6 @@ int MyAI::checkHits(int x, int y){
 
         }
 
-        //  checking middle left
         if(board[rows - y - 1][x - 1] == 0){
             uncov++;
         }
@@ -1086,7 +882,6 @@ int MyAI::checkHits(int x, int y){
             hits++;
         }
 
-        //  checking bottom left
         if(rows - y != rows){
 
             if(board[rows - y][x - 1] == 0){
@@ -1114,23 +909,18 @@ int MyAI::checkHits(int x, int y){
 
 void MyAI::checkPattern(){
 
-    // if it has 3 1's adjacent to it in a row
-
     bool top = false;
     bool bottom = false;
 
-    // 1's on right side
     if(oldXPos + 1 != cols){
         if(board[rows - oldYPos - 1][oldXPos + 1] == 1){
             if(rows - oldYPos != rows){
                 if(board[rows - oldYPos][oldXPos + 1] == 1){
                     if(rows - oldYPos - 2 != -1){
                         if(board[rows - oldYPos - 2][oldXPos + 1] == 1){
-                            // check next one on top right
                             if(rows - oldYPos - 3 != -1){
                                 top = true;
                             }
-                            // check next one on bottom right
                             if(rows - oldYPos + 1 != rows){
                                 bottom = true;
                             }
@@ -1155,18 +945,15 @@ void MyAI::checkPattern(){
         }
     }
 
-    // 1's on left side
     if(oldXPos - 1 != -1){
         if(board[rows - oldYPos - 1][oldXPos - 1] == 1){
             if(rows - oldYPos != rows){
                 if(board[rows - oldYPos][oldXPos - 1] == 1){
                     if(rows - oldYPos - 2 != -1){
                         if(board[rows - oldYPos - 2][oldXPos - 1] == 1){
-                            // check next one on top right
                             if(rows - oldYPos - 3 != -1){
                                 top = true;
                             }
-                            // check next one on bottom right
                             if(rows - oldYPos + 1 != rows){
                                 bottom = true;
                             }
@@ -1191,18 +978,15 @@ void MyAI::checkPattern(){
         }
     }
 
-    // 1's on top side
     if(rows - oldYPos - 2 != -1){
         if(board[rows - oldYPos - 2][oldXPos] == 1){
             if(oldXPos + 1 != cols){
                 if(board[rows - oldYPos - 2][oldXPos + 1] == 1){
                     if(oldXPos - 1 != -1){
                         if(board[rows - oldYPos - 2][oldXPos - 1] == 1){
-                            // check next one on top right
                             if(oldXPos + 2 != cols){
                                 top = true;
                             }
-                            // check next one on bottom right
                             if(oldXPos - 2 != -1){
                                 bottom = true;
                             }
@@ -1227,18 +1011,15 @@ void MyAI::checkPattern(){
         }
     }
 
-    // 1's on bottom side
     if(rows - oldYPos != rows){
         if(board[rows - oldYPos][oldXPos] == 1){
             if(oldXPos + 1 != cols){
                 if(board[rows - oldYPos][oldXPos + 1] == 1){
                     if(oldXPos - 1 != -1){
                         if(board[rows - oldYPos][oldXPos - 1] == 1){
-                            // check next one on top right
                             if(oldXPos + 2 != cols){
                                 top = true;
                             }
-                            // check next one on bottom right
                             if(oldXPos - 2 != -1){
                                 bottom = true;
                             }
@@ -1268,14 +1049,12 @@ void MyAI::checkPattern(){
 bool MyAI::checkCFrontier(int x, int y){
     if(x + 1 != cols){
 
-        //  checking bottom right
         if(rows - y != rows){
             if(board[rows - y][x + 1] == -2){
                 return true;
             }                                                                                                                                                                                                                                                                
         }
 
-        //  checking top right
         if(rows - y - 2 != -1){
 
             if(board[rows - y - 2][x + 1] == -2){
@@ -1285,13 +1064,11 @@ bool MyAI::checkCFrontier(int x, int y){
 
         }
 
-        //  checking middle right
         if(board[rows - y - 1][x + 1] == -2){
             return true;
         }     
     }
 
-    //  checking top middle
     if(rows - y - 2 != -1){
 
         if(board[rows - y - 2][x] == -2){
@@ -1300,7 +1077,6 @@ bool MyAI::checkCFrontier(int x, int y){
         
     }
     
-    //  checking bottom middle
     if(rows - y != rows){
 
         if(board[rows - y][x] == -2){
@@ -1309,10 +1085,8 @@ bool MyAI::checkCFrontier(int x, int y){
 
     }    
 
-    //  checking left side
     if(x - 1 != -1){
 
-        //  checking top left
         if(rows - y - 2 != -1){
 
             if(board[rows - y - 2][x - 1] == -2){
@@ -1321,12 +1095,10 @@ bool MyAI::checkCFrontier(int x, int y){
 
         }
 
-        //  checking middle left
         if(board[rows - y - 1][x - 1] == -2){
             return true;
         }
 
-        //  checking bottom left
         if(rows - y != rows){
 
             if(board[rows - y][x - 1] == -2){
@@ -1344,14 +1116,12 @@ bool MyAI::checkVFrontier(int x, int y){
     
     if(x + 1 != cols){
 
-        //  checking bottom right
         if(rows - y != rows){
             if(board[rows - y][x + 1] >= 0){
                 return true;
             }                                                                                                                                                                                                                                                                
         }
 
-        //  checking top right
         if(rows - y - 2 != -1){
 
             if(board[rows - y - 2][x + 1] >= 0){
@@ -1361,13 +1131,11 @@ bool MyAI::checkVFrontier(int x, int y){
 
         }
 
-        //  checking middle right
         if(board[rows - y - 1][x + 1] >= 0){
             return true;
         }     
     }
 
-    //  checking top middle
     if(rows - y - 2 != -1){
 
         if(board[rows - y - 2][x] >= 0){
@@ -1376,7 +1144,6 @@ bool MyAI::checkVFrontier(int x, int y){
         
     }
     
-    //  checking bottom middle
     if(rows - y != rows){
 
         if(board[rows - y][x] >= 0){
@@ -1385,10 +1152,8 @@ bool MyAI::checkVFrontier(int x, int y){
 
     }    
 
-    //  checking left side
     if(x - 1 != -1){
 
-        //  checking top left
         if(rows - y - 2 != -1){
 
             if(board[rows - y - 2][x - 1] >= 0){
@@ -1397,12 +1162,10 @@ bool MyAI::checkVFrontier(int x, int y){
 
         }
 
-        //  checking middle left
         if(board[rows - y - 1][x - 1] >= 0){
             return true;
         }
 
-        //  checking bottom left
         if(rows - y != rows){
 
             if(board[rows - y][x - 1] >= 0){
@@ -1414,6 +1177,3 @@ bool MyAI::checkVFrontier(int x, int y){
 
     return false;
 }
-// ======================================================================
-// YOUR CODE ENDS
-// ======================================================================

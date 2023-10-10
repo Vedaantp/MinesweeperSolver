@@ -69,10 +69,6 @@ public:
     Action getAction ( int number ) override;
 
 
-    // ======================================================================
-    // YOUR CODE BEGINS
-    // ======================================================================
-
     void updateBoard(int number);
 
     void pushAdjacentToZero();
@@ -88,9 +84,7 @@ public:
     bool checkCFrontier(int x, int y);
 
 
-    // ======================================================================
-    // YOUR CODE ENDS
-    // ======================================================================
+
 };
 
 #endif //MINE_SWEEPER_CPP_SHELL_MYAI_HPP
